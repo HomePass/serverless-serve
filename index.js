@@ -197,6 +197,12 @@ module.exports = function(ServerlessPlugin, serverlessPath) {
                   }
                 }
 
+                for( prop in req.headers ) {
+                  if( req.headers.hasOwnProperty( prop ) ){
+                    event[ prop ] = req.query[ prop ];
+                  }
+                }
+
                 if( !handler ) {
                   try {
                     handler = require( handlerPath )[handlerParts[1]];
