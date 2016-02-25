@@ -177,7 +177,12 @@ module.exports = function(ServerlessPlugin, serverlessPath) {
 
               let result = new BbPromise(function(resolve, reject) {
 
-                let event = {};
+                let event = {
+                  body: {},
+                  params: {},
+                  query: {},
+                  headers: {}
+                };
                 let prop;
 
                 let contentType;
@@ -193,25 +198,25 @@ module.exports = function(ServerlessPlugin, serverlessPath) {
 
                 for( prop in req.body ) {
                   if( req.body.hasOwnProperty( prop ) ){
-                    event[ prop ] = req.body[ prop ];
+                    event.body[ prop ] = req.body[ prop ];
                   }
                 }
 
                 for( prop in req.params ) {
                   if( req.params.hasOwnProperty( prop ) ){
-                    event[ prop ] = req.params[ prop ];
+                    event.params[ prop ] = req.params[ prop ];
                   }
                 }
 
                 for( prop in req.query ) {
                   if( req.query.hasOwnProperty( prop ) ){
-                    event[ prop ] = req.query[ prop ];
+                    event.query[ prop ] = req.query[ prop ];
                   }
                 }
 
                 for( prop in req.headers ) {
                   if( req.headers.hasOwnProperty( prop ) ){
-                    event[ prop ] = req.headers[ prop ];
+                    event.headers[ prop ] = req.headers[ prop ];
                   }
                 }
 
