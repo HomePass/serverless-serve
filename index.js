@@ -2,13 +2,13 @@
 
 module.exports = function(ServerlessPlugin, serverlessPath) {
   const path = require( 'path' ),
-  SUtils = require( path.join( serverlessPath, 'utils' ) ),
-  context = require( path.join( serverlessPath, 'utils', 'context' ) ),
-  SCli = require( path.join( serverlessPath, 'utils', 'cli' ) ),
-  express = require('express'),
-  bodyParser = require('body-parser'),
-  BbPromise = require( 'bluebird' ),
-  Velocity = require('velocityjs');
+      SUtils = require( path.join( serverlessPath, 'utils' ) ),
+      context = require( path.join( serverlessPath, 'utils', 'context' ) ),
+      SCli = require( path.join( serverlessPath, 'utils', 'cli' ) ),
+      express = require('express'),
+      bodyParser = require('body-parser'),
+      BbPromise = require( 'bluebird' ),
+      Velocity = require('velocityjs');
 
   class Serve extends ServerlessPlugin {
     constructor(S) {
@@ -110,30 +110,30 @@ module.exports = function(ServerlessPlugin, serverlessPath) {
 
       return functions.forEach(function(fun) {
         /*
-        _config:
-          { component: 'node',
-            module: 'homepage',
-            function: 'index',
-            sPath: 'node/homepage/index',
-            fullPath: '/path/to/some/serverless/project/node/homepage/index' },
-        name: 'index',
-        handler: 'homepage/index/handler.handler',
-        runtime: 'nodejs',
-        timeout: 6,
-        memorySize: 1024,
-        custom: { excludePatterns: [], envVars: [] },
-        endpoints:
+         _config:
+         { component: 'node',
+         module: 'homepage',
+         function: 'index',
+         sPath: 'node/homepage/index',
+         fullPath: '/path/to/some/serverless/project/node/homepage/index' },
+         name: 'index',
+         handler: 'homepage/index/handler.handler',
+         runtime: 'nodejs',
+         timeout: 6,
+         memorySize: 1024,
+         custom: { excludePatterns: [], envVars: [] },
+         endpoints:
          [ ServerlessEndpoint {
-             _S: [Object],
-             _config: [Object],
-             path: 'homepage/index',
-             method: 'GET',
-             authorizationType: 'none',
-             apiKeyRequired: false,
-             requestParameters: {},
-             requestTemplates: [Object],
-             responses: [Object] } ] }
-       */
+         _S: [Object],
+         _config: [Object],
+         path: 'homepage/index',
+         method: 'GET',
+         authorizationType: 'none',
+         apiKeyRequired: false,
+         requestParameters: {},
+         requestTemplates: [Object],
+         responses: [Object] } ] }
+         */
 
         if( fun.getRuntime() == 'nodejs' ) {
           let handlerParts = fun.handler.split('/').pop().split('.');
@@ -180,28 +180,34 @@ module.exports = function(ServerlessPlugin, serverlessPath) {
                 let event = {};
                 let prop;
 
-                //get the template for the request type
                 let contentType;
                 if (req && req.headers){
-                  contentType = req.headers["Content-Type"];
+                  contentType = req.headers["content-type"];
                 }
 
                 let templateMapping;
-                if (endpoint.requestTemplates && endpoint.requestTemplates.length > 0) {
-                  endpoint.requestTemplates.keys().forEach(function (requestTemplateType) {
-                    if (requestTemplateType.indexOf(contentType) > -1) {
-                      templateMapping = endpoint.requestTemplates[requestTemplateType];
-                    }
-                  });
+                if (endpoint.requestTemplates) {
+                  templateMapping = endpoint.requestTemplates[contentType];
                 }
 
                 if (templateMapping){
                   let templateContext = {};
                   templateContext.input = {};
-                  templateContext.input.json = req.body;
-                  req.params.headers = req.headers;
-                  templateContext.input.params = req.params;
-                  Velocity.render(templateMapping, templateContext);
+                  templateContext.input.json = function(input){
+                    return req.body;
+                  };
+
+                  templateContext.input.params = function(input){
+                    let paramObj = {};
+                    paramObj.header = req.headers;
+                    paramObj.path = req.path;
+                    paramObj.queryString = req.query;
+                    return paramObj;
+                  };
+
+                  let result = Velocity.render(templateMapping, templateContext);
+                  console.log("Result",result);
+                  event = result;
                 } else {
                   for( prop in req.body ) {
                     if( req.body.hasOwnProperty( prop ) ){
@@ -297,7 +303,7 @@ module.exports = function(ServerlessPlugin, serverlessPath) {
         SCli.log( "Serverless API Gateway simulator listening on http://localhost:" + _this.evt.port );
       });
     }
-    
+
     _registerBabel() {
       return new this.S.classes.Project(this.S).load().then(project => { // Promise to load project
         const custom = project.custom['serverless-serve'];
@@ -317,15 +323,15 @@ module.exports = function(ServerlessPlugin, serverlessPath) {
       _this.evt = evt;
 
       return this.S.init()
-        .bind(_this)
-        .then(_this._registerBabel)
-        .then(_this._createApp)
-        .then(_this._registerLambdas)
-        .then(_this._tryInit)
-        .then(_this._listen)
-        .then(function() {
-          return _this.evt;
-        });
+          .bind(_this)
+          .then(_this._registerBabel)
+          .then(_this._createApp)
+          .then(_this._registerLambdas)
+          .then(_this._tryInit)
+          .then(_this._listen)
+          .then(function() {
+            return _this.evt;
+          });
     }
   }
   return Serve;
