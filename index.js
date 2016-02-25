@@ -190,48 +190,31 @@ module.exports = function(ServerlessPlugin, serverlessPath) {
                   templateMapping = endpoint.requestTemplates[contentType];
                 }
 
-                if (templateMapping){
-                  let templateContext = {};
-                  templateContext.input = {};
-                  templateContext.input.json = function(input){
-                    return req.body;
-                  };
 
-                  templateContext.input.params = function(input){
-                    let paramObj = {};
-                    paramObj.header = req.headers;
-                    paramObj.path = req.path;
-                    paramObj.queryString = req.query;
-                    return paramObj;
-                  };
-
-                  let result = Velocity.render(templateMapping, templateContext);
-                  event = result;
-                } else {
-                  for( prop in req.body ) {
-                    if( req.body.hasOwnProperty( prop ) ){
-                      event[ prop ] = req.body[ prop ];
-                    }
-                  }
-
-                  for( prop in req.params ) {
-                    if( req.params.hasOwnProperty( prop ) ){
-                      event[ prop ] = req.params[ prop ];
-                    }
-                  }
-
-                  for( prop in req.query ) {
-                    if( req.query.hasOwnProperty( prop ) ){
-                      event[ prop ] = req.query[ prop ];
-                    }
-                  }
-
-                  for( prop in req.headers ) {
-                    if( req.headers.hasOwnProperty( prop ) ){
-                      event[ prop ] = req.headers[ prop ];
-                    }
+                for( prop in req.body ) {
+                  if( req.body.hasOwnProperty( prop ) ){
+                    event[ prop ] = req.body[ prop ];
                   }
                 }
+
+                for( prop in req.params ) {
+                  if( req.params.hasOwnProperty( prop ) ){
+                    event[ prop ] = req.params[ prop ];
+                  }
+                }
+
+                for( prop in req.query ) {
+                  if( req.query.hasOwnProperty( prop ) ){
+                    event[ prop ] = req.query[ prop ];
+                  }
+                }
+
+                for( prop in req.headers ) {
+                  if( req.headers.hasOwnProperty( prop ) ){
+                    event[ prop ] = req.headers[ prop ];
+                  }
+                }
+
 
                 if( !handler ) {
                   try {
