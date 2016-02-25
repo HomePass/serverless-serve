@@ -206,7 +206,6 @@ module.exports = function(ServerlessPlugin, serverlessPath) {
                   };
 
                   let result = Velocity.render(templateMapping, templateContext);
-                  console.log("Result",result);
                   event = result;
                 } else {
                   for( prop in req.body ) {
