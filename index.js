@@ -7,7 +7,8 @@ module.exports = function(ServerlessPlugin, serverlessPath) {
   SCli = require( path.join( serverlessPath, 'utils', 'cli' ) ),
   express = require('express'),
   bodyParser = require('body-parser'),
-  BbPromise = require( 'bluebird' );
+  BbPromise = require( 'bluebird' ),
+  Velocity = require('velocityjs');
 
   class Serve extends ServerlessPlugin {
     constructor(S) {
@@ -179,27 +180,51 @@ module.exports = function(ServerlessPlugin, serverlessPath) {
                 let event = {};
                 let prop;
 
-                for( prop in req.body ) {
-                  if( req.body.hasOwnProperty( prop ) ){
-                    event[ prop ] = req.body[ prop ];
-                  }
+                //get the template for the request type
+                let contentType;
+                if (req && req.headers){
+                  contentType = req.headers["Content-Type"];
                 }
 
-                for( prop in req.params ) {
-                  if( req.params.hasOwnProperty( prop ) ){
-                    event[ prop ] = req.params[ prop ];
-                  }
+                let templateMapping;
+                if (endpoint.requestTemplates && endpoint.requestTemplates.length > 0) {
+                  endpoint.requestTemplates.keys().forEach(function (requestTemplateType) {
+                    if (requestTemplateType.indexOf(contentType) > -1) {
+                      templateMapping = endpoint.requestTemplates[requestTemplateType];
+                    }
+                  });
                 }
 
-                for( prop in req.query ) {
-                  if( req.query.hasOwnProperty( prop ) ){
-                    event[ prop ] = req.query[ prop ];
+                if (templateMapping){
+                  let templateContext = {};
+                  templateContext.input = {};
+                  templateContext.input.json = req.body;
+                  req.params.headers = req.headers;
+                  templateContext.input.params = req.params;
+                  Velocity.render(templateMapping, templateContext);
+                } else {
+                  for( prop in req.body ) {
+                    if( req.body.hasOwnProperty( prop ) ){
+                      event[ prop ] = req.body[ prop ];
+                    }
                   }
-                }
 
-                for( prop in req.headers ) {
-                  if( req.headers.hasOwnProperty( prop ) ){
-                    event[ prop ] = req.headers[ prop ];
+                  for( prop in req.params ) {
+                    if( req.params.hasOwnProperty( prop ) ){
+                      event[ prop ] = req.params[ prop ];
+                    }
+                  }
+
+                  for( prop in req.query ) {
+                    if( req.query.hasOwnProperty( prop ) ){
+                      event[ prop ] = req.query[ prop ];
+                    }
+                  }
+
+                  for( prop in req.headers ) {
+                    if( req.headers.hasOwnProperty( prop ) ){
+                      event[ prop ] = req.headers[ prop ];
+                    }
                   }
                 }
 
